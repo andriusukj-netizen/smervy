@@ -1,0 +1,199 @@
+/* ui.css - Bybit-style dark theme with gold accent */
+
+/* Theme variables */
+:root {
+  --bg: #0b0e11;
+  --bg-secondary: #111318;
+  --bg-tertiary: #16181b;
+  --card-bg: #0f1316;
+  --text: #e9edf0;
+  --text-dim: #8a93a1;
+  --border: rgba(255,255,255,0.04);
+  --shadow: 0 6px 24px rgba(0,0,0,0.6);
+  --gold-1: #fcd535;
+  --gold-2: #f5a623;
+  --accent-gradient: linear-gradient(135deg,var(--gold-1),var(--gold-2));
+  --accent: #f5b02f;
+  --success: #0ecb81;
+  --danger: #f6465d;
+  --glass: rgba(255,255,255,0.02);
+  --mono: 'SF Mono', 'Monaco', 'Roboto Mono', monospace;
+  --ui-radius: 10px;
+  --ease: cubic-bezier(.2,.9,.2,1);
+}
+
+/* Overlay */
+.pt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  z-index: 9998;
+  display: none;
+}
+
+/* Panel */
+.paper-trader-panel {
+  position: fixed;
+  top: 0;
+  right: -520px;
+  width: 520px;
+  height: 100vh;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  background-color: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  z-index: 9999;
+  overflow: hidden;
+  transition: right 340ms var(--ease), transform 240ms var(--ease);
+  font-family: Inter, "SF Pro Text", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+}
+
+/* Header */
+.pt-header {
+  padding: 20px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(0,0,0,0.02), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.pt-header .brand {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.pt-header .brand .logo {
+  width:40px; height:40px; border-radius:8px;
+  background: var(--accent-gradient);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 8px 20px rgba(245,160,35,0.08);
+  font-size: 18px;
+}
+.pt-header h2 { margin:0; font-size:16px; font-weight:700; }
+.pt-header .subtitle { font-size:11px; color:var(--text-dim); margin-top:2px; }
+
+/* Close button */
+#pt-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  cursor:pointer; transition: transform 140ms var(--ease), background 140ms var(--ease);
+}
+#pt-close:hover { transform: translateY(-2px); background: var(--glass); }
+
+/* Content area */
+.pt-body {
+  flex:1;
+  overflow-y:auto;
+  padding: 20px;
+  gap: 16px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Accent card */
+.pt-accent-card {
+  background: linear-gradient(180deg, rgba(245,176,47,0.08), rgba(245,176,47,0.03));
+  padding: 18px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(245,176,47,0.06);
+  border: 1px solid rgba(245,176,47,0.06);
+}
+
+/* Balance / P&L */
+.pt-metric {
+  display:flex; justify-content:space-between; align-items:center;
+}
+.pt-balance { font-size:22px; font-weight:800; font-family:var(--mono); }
+.pt-pnl { font-size:16px; font-weight:700; font-family:var(--mono); }
+
+/* Info card */
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 12px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+}
+
+/* Tabs */
+.pt-tabs {
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:8px;
+  margin-bottom:8px;
+  background: transparent;
+}
+.pt-tab {
+  padding:10px 8px;border-radius:10px;border:1px solid transparent;
+  background: transparent; color:var(--text-dim); font-weight:700; font-size:12px;
+  cursor:pointer; transition: all 180ms var(--ease);
+}
+.pt-tab.active { background:var(--accent-gradient); color:#0b0e11; box-shadow: 0 6px 20px rgba(245,160,35,0.12); }
+
+/* Tab content */
+.pt-tab-content { display:none; opacity:0; transform: translateY(6px); transition: all 200ms var(--ease); }
+.pt-tab-content.active { display:block; opacity:1; transform: translateY(0); }
+
+/* Order form */
+#pt-order-form { display:flex; flex-direction:column; gap:14px; }
+.input, select {
+  width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border);
+  background: transparent; color:var(--text); font-size:13px; font-weight:500;
+}
+#pt-price-field { display:none; }
+
+/* Buttons */
+.btn {
+  padding:12px;border-radius:10px;cursor:pointer;border:none;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.btn-primary {
+  background:var(--accent-gradient); color:#0b0e11; box-shadow:0 8px 24px rgba(245,160,35,0.12);
+}
+.btn-ghost {
+  background:transparent;border:1px solid var(--border); color:var(--text);
+}
+.btn-danger { border:1px solid rgba(246,70,93,0.14); color:var(--danger); background:transparent; }
+
+/* Small utility */
+.row { display:flex; gap:12px; }
+.col { flex:1; }
+
+/* Position item */
+.pos-item { padding:12px; border-radius:10px; background:var(--card-bg); border:1px solid var(--border); }
+.pos-item .symbol { font-size:15px; font-weight:700; }
+.pos-item .meta { font-size:11px; color:var(--text-dim); margin-top:6px; }
+
+/* Positive / Negative */
+.positive { color: var(--success); font-weight:700; }
+.negative { color: var(--danger); font-weight:700; }
+
+/* Footer controls */
+.pt-footer { padding:16px 20px; border-top:1px solid var(--border); background:linear-gradient(180deg, transparent, rgba(0,0,0,0.02)); flex-shrink:0; }
+.pt-footer .controls { display:flex; gap:8px; margin-bottom:10px; }
+
+/* Toggle button */
+.pt-toggle-btn.header-placement {
+  position: fixed; top: 16px; right: 16px; width:48px;height:48px;border-radius:12px;border:none;
+  background: var(--accent-gradient); color:#0b0e11; font-size:22px; cursor:pointer; z-index:9997;
+  box-shadow: 0 8px 24px rgba(245,160,35,0.14); display:flex; align-items:center; justify-content:center;
+  transition: transform 140ms var(--ease), box-shadow 140ms var(--ease);
+}
+.pt-toggle-btn.header-placement:hover { transform:scale(1.06); box-shadow: 0 12px 30px rgba(245,160,35,0.18); }
+
+/* Small badges */
+.pt-badge { background: rgba(255,255,255,0.03); padding:3px 6px; border-radius:999px; font-size:11px; color:var(--text-dim); }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .paper-trader-panel { width: 100vw; right: -100vw; }
+}
