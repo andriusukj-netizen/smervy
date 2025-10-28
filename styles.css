@@ -1,0 +1,1430 @@
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --muted: #8b949e;
+  --accent: #58a6ff;
+  --ok: #2ecc71;
+  --danger: #ff5c74;
+}
+
+/* Light theme overrides */
+:root[data-theme="light"] {
+  --bg: #f5f7fa;
+  --panel: #fff;
+  --border: #d0d7de;
+  --text: #23272e;
+  --muted: #6e7781;
+  --accent: #2176ff;
+  --ok: #2ecc71;
+  --danger: #d7263d;
+}
+:root[data-theme="light"] .chart-header { background: #f5f7fa; }
+:root[data-theme="light"] .tvchart,
+:root[data-theme="light"] .chart-wrap { background: #f5f7fa; }
+:root[data-theme="light"] .rsi-panel,
+:root[data-theme="light"] .macd-panel { background: #fff; }
+:root[data-theme="light"] .ema-badges span { background: rgba(255,255,255,0.85) !important; color: #23272e !important; }
+
+/* Reset & Base */
+* { box-sizing: border-box; }
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* HEADER - compact top panel with neat row of controls */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  gap: 8px;
+  min-height: 52px; /* slightly reduced height for a compact top bar */
+}
+
+/* Make the .row inside header a compact horizontal flex row */
+header .row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  flex-wrap: nowrap; /* keep buttons in single line where possible */
+}
+
+/* Ensure inputs and buttons in the header are compact and visually consistent */
+header .row > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  gap: 8px;
+}
+
+/* Tighter, consistent sizes for header controls */
+header .row input[type="text"],
+header .row select,
+header .row button,
+header .row .pt-toggle-btn.header-placement {
+  height: 40px;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+}
+
+/* Make the Add button more prominent but compact */
+#add-chart {
+  background: var(--accent);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 72px;
+  height: 40px;
+  box-shadow: none;
+  align-self: center;
+}
+
+/* Input - subtle: reduce visual weight in header */
+#new-symbol {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  min-width: 140px;
+  height: 40px;
+}
+
+/* Favorites select compact */
+#favorite-select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  height: 40px;
+}
+
+/* Global status compact */
+#status-global {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+}
+.dot-global {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+  display: inline-block;
+  flex-shrink: 0;
+}
+#label-global {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+/* Ensure the header's child controls don't wrap unexpectedly on medium screens */
+@media (max-width: 860px) {
+  header .row {
+    gap: 6px;
+    flex-wrap: wrap; /* allow wrapping on small screens */
+  }
+  header .row input[type="text"] {
+    min-width: 120px;
+  }
+}
+
+/* PAPER TRADER TOGGLE - header placement style (neat inline button) */
+.pt-toggle-btn.header-placement {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 10px;
+  height: 40px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: none;
+  transition: background 0.18s, color 0.18s, transform 0.12s;
+}
+.pt-toggle-btn.header-placement:hover {
+  background: rgba(33,118,255,0.08);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* Fallback floating toggle button (kept small and unobtrusive) */
+.pt-toggle-btn {
+  position: fixed;
+  top: 70px;
+  right: 12px;
+  z-index: 9997;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(102,126,234,0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 720px) {
+  .pt-toggle-btn { top: 64px; right: 10px; padding: 10px 12px; font-size: 13px; }
+}
+
+/* Small polish: reduce header control visual noise */
+header .row button,
+header .row select,
+header .row input[type="text"] {
+  box-shadow: none;
+  outline: none;
+}
+
+/* Keep the rest of the stylesheet unchanged below (existing styles) */
+/* ... (rest of your existing CSS remains, unchanged) ... */
+
+/* Grid layout */
+main {
+  height: calc(100vh - 56px);
+  padding: 12px;
+  overflow: hidden;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 10px;
+  height: 100%;
+  grid-auto-rows: 1fr;
+}
+
+.chart-grid:has(.chart-card:nth-child(1):last-child) { grid-template-columns: 1fr; }
+.chart-grid:has(.chart-card:nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }
+.chart-grid:has(.chart-card:nth-child(5):last-child) { grid-template-columns: repeat(2, 1fr); }
+.chart-grid:has(.chart-card:nth-child(5):last-child) .chart-card:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+/* Chart Card */
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  background: var(--panel);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.chart-card.placeholder {
+  background: none;
+  border: none;
+}
+
+/* Compact header */
+.chart-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #23272e;
+  font-size: 1em;
+  min-height: 56px;
+  flex-wrap: wrap;
+}
+
+.ticker-input,
+.current-price,
+.timeframe-select,
+.favorite-star,
+.right-controls button {
+  font-size: 1em;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  touch-action: manipulation;
+}
+
+.timeframe-select {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.chart-wrap {
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  background: #11161d;
+}
+
+.tvchart {
+  flex: 1 1 0%;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  background: #11161d !important;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+/* === EMA Badges overlayed inside chart === */
+.chart-wrap .ema-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  z-index: 10;
+  pointer-events: none;
+  max-width: calc(100% - 60px);
+}
+.chart-wrap .ema-badges span {
+  background: rgba(22,27,34,0.85);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.5px;
+  pointer-events: auto;
+  cursor: default;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.chart-wrap .ema-badges span:hover {
+  background: rgba(40,46,56,0.95);
+}
+
+/* Drag handle */
+.drag-handle {
+  cursor: grab;
+  font-size: 22px;
+  padding: 8px 12px;
+  color: var(--muted);
+  user-select: none;
+  touch-action: manipulation;
+  border-radius: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.drag-handle:active { background: var(--border); }
+.drag-handle:hover { color: var(--accent); }
+.chart-card.dragging .drag-handle { cursor: grabbing; }
+
+/* Ticker + Price */
+.ticker-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ticker-input {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 16px;
+  width: 100px;
+  min-width: 80px;
+  padding: 8px 4px;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+.current-price {
+  font-weight: 700;
+  margin-left: 4px;
+  font-size: 16px;
+  white-space: nowrap;
+}
+.current-price.up { color: var(--ok); }
+.current-price.down { color: var(--danger); }
+
+/* Controls */
+.right-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* Buttons */
+.remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  font-size: 1.4em;
+  cursor: pointer;
+  margin-left: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+.remove-btn:hover { color: #ff808f; background: var(--border); }
+
+.expand-btn,
+.fullscreen-btn,
+.toggle-indicators,
+.drawing-tools-btn,
+.custom-indicator-btn {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 1.4em;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.expand-btn:hover,
+.fullscreen-btn:hover,
+.toggle-indicators:hover,
+.drawing-tools-btn:hover,
+.custom-indicator-btn:hover { 
+  color: var(--accent); 
+  background: var(--border); 
+}
+
+/* ✅ Drawing Tools Button Active State */
+.drawing-tools-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ✅ Drawing Toolbar Styles */
+.drawing-toolbar {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.drawing-toolbar button {
+  transition: all 0.2s ease;
+}
+
+.drawing-toolbar button:hover {
+  transform: scale(1.1);
+}
+
+/* Fullscreen mode */
+.chart-card.fullscreen {
+  position: fixed !important;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 9999;
+  border-radius: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+.chart-card.fullscreen .chart-wrap { flex: 3; }
+.chart-card.fullscreen .rsi-panel { flex: 1; }
+
+/* Panels - hide by default (no space used) */
+.rsi-panel, .macd-panel, .stochrsi-panel, .indicators-panel, .ema-settings-panel {
+  display: none;
+  max-height: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  background: #161b22;
+  /* Resizable panels support transition for smooth drag */
+  height: auto;
+  transition: max-height 0.18s cubic-bezier(0.3,0.7,0.4,1), height 0.18s cubic-bezier(0.3,0.7,0.4,1);
+}
+
+/* Resizable panels: when active, use explicit height/max-height, allow drag */
+.rsi-panel.active, .macd-panel.active, .stochrsi-panel.active, .indicators-panel.active, .ema-settings-panel.active {
+  display: flex !important;
+  max-height: 400px;
+  height: 400px;
+  overflow: auto;
+  padding: 12px;
+}
+
+/* Indicators Panel */
+.indicators-panel {
+  background: rgba(255,255,255,0.02);
+  border-top: 1px solid var(--border);
+  font-size: 15px;
+  color: var(--text);
+  flex-direction: column;
+  gap: 16px;
+}
+.indicators-panel h4 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: var(--accent);
+}
+.indicator-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.indicator-toggles label {
+  font-size: 14px;
+  user-select: none;
+}
+
+/* RSI Panel */
+.rsi-panel {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  resize: none;
+  box-sizing: border-box;
+  background: #161b22;
+  /* Add resizable support */
+  height: 400px;
+  max-height: 400px;
+  transition: max-height 0.18s cubic-bezier(0.3,0.7,0.4,1), height 0.18s cubic-bezier(0.3,0.7,0.4,1);
+}
+.rsi-header {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+.rsi-title {
+  font-weight: 600;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+}
+.rsi-chart {
+  flex: 1;
+  min-height: 60px;
+  transition: height 0.15s;
+  overflow: visible;
+  background: #11161d;
+}
+
+/* MACD Panel */
+.macd-panel {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  resize: none;
+  box-sizing: border-box;
+  background: #161b22;
+  /* Add resizable support */
+  height: 400px;
+  max-height: 400px;
+  transition: max-height 0.18s cubic-bezier(0.3,0.7,0.4,1), height 0.18s cubic-bezier(0.3,0.7,0.4,1);
+}
+.macd-header {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+.macd-title {
+  font-weight: 600;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+}
+.macd-chart {
+  flex: 1;
+  min-height: 60px;
+  transition: height 0.15s;
+  overflow: visible;
+  background: #11161d;
+}
+
+/* Indicator Resize Handle */
+.indicator-resize-handle {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 14px;
+  cursor: ns-resize;
+  background: linear-gradient(to top, #30363d 60%, transparent 100%);
+  z-index: 5;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  transition: background 0.15s;
+  touch-action: pan-y;
+}
+.indicator-resize-handle:active {
+  background: linear-gradient(to top, #58a6ff 80%, transparent 100%);
+}
+.indicator-resize-handle:focus {
+  outline: 2px solid var(--accent);
+}
+
+/* EMA Settings Panel */
+.ema-settings-panel {
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  z-index: 20;
+}
+.ema-settings-panel h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--accent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ema-settings-panel .close-ema-settings {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.ema-settings-panel .close-ema-settings:hover { color: var(--text); }
+.ema-settings-panel div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ema-settings-panel label {
+  flex: 1;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ema-settings-panel input[type="number"] {
+  width: 60px;
+  padding: 3px 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  font-size: 13px;
+}
+.ema-settings-panel input[type="color"] {
+  width: 28px;
+  height: 22px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.save-ema-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: white;
+  cursor: pointer;
+  margin-top: 4px;
+  align-self: flex-end;
+  min-width: 32px;
+  min-height: 32px;
+}
+.save-ema-btn:hover { background: #3990ff; }
+
+/* Drag & Drop */
+.chart-card.dragging {
+  z-index: 1000;
+  opacity: 0.95;
+  box-shadow: 0 14px 32px rgba(0,0,0,0.5);
+  cursor: grabbing;
+}
+.chart-card.placeholder {
+  border: 2px dashed var(--accent);
+  border-radius: 12px;
+  background: rgba(63, 169, 245, 0.08);
+  min-height: 80px;
+}
+.chart-card.dropped {
+  animation: bounce-landing 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes bounce-landing {
+  0%   { transform: scale(0.95); }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Favorites */
+.favorite-star {
+  cursor: pointer;
+  font-size: 24px;
+  margin-left: 6px;
+  color: var(--muted);
+  transition: color 0.2s ease, transform 0.2s ease;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+.favorite-star.favorited { color: gold; }
+.favorite-star:hover {
+  color: gold;
+  transform: scale(1.15);
+}
+
+/* Highlight effect */
+.chart-card.highlight {
+  box-shadow: 0 0 12px gold;
+  transition: box-shadow 0.6s ease;
+}
+
+/* Tooltips/help icons for controls */
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 18px;
+  vertical-align: middle;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  line-height: 24px;
+  outline: none;
+  background: rgba(40,46,56,0.6);
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+.help-icon:after {
+  content: "?";
+  font-weight: bold;
+  font-size: 15px;
+}
+.help-icon[title] {
+  position: relative;
+}
+.help-icon.help-show::before,
+.help-icon:focus::before,
+.help-icon:hover::before {
+  content: attr(title);
+  position: absolute;
+  left: 110%;
+  top: 0;
+  background: #24292f;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 12px;
+  white-space: pre-line;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  min-width: 120px;
+  max-width: 220px;
+  pointer-events: none;
+  opacity: 0.98;
+}
+
+/* Suggestion box */
+#symbol-suggestions {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 3000;
+  font-size: 15px;
+}
+.suggestion-item {
+  padding: 12px 14px;
+  cursor: pointer;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  touch-action: manipulation;
+}
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+.suggestion-item:hover,
+.suggestion-item:active {
+  background: #23272e;
+  color: var(--accent);
+}
+
+/* ✅ Drawing Tools Button Active State - Theme Aware */
+.drawing-tools-btn.active {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+/* ✅ Drawing Toolbar Styles - Theme Aware */
+.drawing-toolbar {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.2s ease, background 0.2s ease, border 0.2s ease;
+}
+
+/* ✅ Theme-aware button hover */
+.drawing-toolbar button:hover {
+  transform: scale(1.1);
+}
+
+:root[data-theme="dark"] .drawing-toolbar button:hover {
+  background: rgba(33, 118, 255, 0.2) !important;
+}
+
+:root[data-theme="light"] .drawing-toolbar button:hover {
+  background: rgba(33, 118, 255, 0.15) !important;
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+
+/* Responsive for mobile/small screens */
+@media (max-width: 900px) {
+  html, body {
+    font-size: 16px;
+  }
+  
+  main {
+    height: calc(100vh - 70px);
+    padding: 8px;
+  }
+  
+  header {
+    padding: 10px;
+    min-height: auto;
+  }
+  
+  #new-symbol {
+    font-size: 16px;
+    padding: 12px;
+  }
+  
+  #add-chart {
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+  
+  .chart-grid { 
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 8px;
+  }
+  
+  .chart-card {
+    min-width: 0;
+    min-height: 300px;
+    font-size: 16px;
+  }
+  
+  .chart-header {
+    padding: 12px 10px;
+    gap: 10px;
+    font-size: 16px;
+    min-height: auto;
+  }
+  
+  .ticker-input {
+    font-size: 17px;
+    padding: 10px 6px;
+  }
+  
+  .current-price {
+    font-size: 17px;
+  }
+  
+  .timeframe-select {
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+  
+  .right-controls {
+    gap: 12px;
+    justify-content: flex-end;
+  }
+  
+  .right-controls button {
+    font-size: 1.5em;
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  .drag-handle {
+    font-size: 24px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  .favorite-star {
+    font-size: 26px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  .chart-wrap { 
+    min-height: 200px;
+  }
+  
+  .indicators-panel {
+    padding: 12px;
+    font-size: 16px;
+    gap: 12px;
+  }
+  
+  .indicator-toggles label {
+    font-size: 16px;
+    padding: 8px 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .indicator-toggles input[type="checkbox"] {
+    min-width: 24px;
+    min-height: 24px;
+    margin-right: 12px;
+  }
+  
+  .ema-settings-panel {
+    padding: 12px;
+    font-size: 16px;
+    gap: 12px;
+  }
+  
+  .ema-settings-panel input[type="number"] {
+    font-size: 16px;
+    padding: 10px;
+    min-height: 44px;
+  }
+  
+  .save-ema-btn {
+    font-size: 16px;
+    padding: 12px 20px;
+    min-height: 48px;
+  }
+  
+  .rsi-panel, .macd-panel {
+    padding: 8px;
+    min-height: 120px;
+  }
+  
+  .rsi-title, .macd-title {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+  
+  .indicator-resize-handle {
+    height: 20px;
+  }
+  
+  .chart-wrap .ema-badges {
+    gap: 5px;
+    top: 6px;
+    left: 6px;
+    max-width: calc(100% - 50px);
+  }
+  .chart-wrap .ema-badges span {
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+  
+  /* Drawing Toolbar */
+  .drawing-toolbar {
+    top: 60px !important;
+    right: 8px !important;
+    flex-wrap: wrap;
+    max-width: 220px;
+    padding: 8px !important;
+    gap: 10px !important;
+  }
+  
+  .drawing-toolbar button {
+    font-size: 1.4em !important;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px !important;
+  }
+  
+  .drawing-toolbar input[type="number"],
+  .drawing-toolbar input[type="color"] {
+    min-height: 44px;
+  }
+  
+  /* Suggestion box */
+  #symbol-suggestions {
+    max-height: 200px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+  
+  .suggestion-item {
+    padding: 14px 16px;
+    min-height: 52px;
+  }
+  
+  .help-icon {
+    font-size: 20px;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+  }
+  .help-icon:after {
+    font-size: 16px;
+  }
+  
+  .error-banner {
+    font-size: 15px;
+    padding: 14px 12px;
+  }
+  
+  .header-left select,
+  #favorite-select {
+    font-size: 15px;
+    padding: 10px 12px;
+  }
+  
+  /* Ensure all interactive elements are touch-friendly (44px minimum) */
+  button, select, input, a, .clickable {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  /* Prevent text from being too small */
+  body, input, select, textarea, button {
+    font-size: 16px !important;
+  }
+  
+  /* Improve tap target spacing */
+  .chart-header > * {
+    margin: 2px;
+  }
+  
+  /* Make modals more mobile-friendly */
+  #custom-indicator-modal > div {
+    margin: 20px auto 0 auto !important;
+    max-width: 95% !important;
+    padding: 16px !important;
+  }
+  
+  #custom-indicator-modal textarea {
+    font-size: 15px !important;
+    min-height: 200px !important;
+  }
+  
+  #custom-indicator-modal button {
+    font-size: 16px !important;
+    padding: 12px 20px !important;
+    min-height: 48px !important;
+  }
+}
+
+/* Extra small screens/mobile stacking */
+@media (max-width: 600px) {
+  html, body {
+    font-size: 16px;
+  }
+  
+  main {
+    height: calc(100vh - 80px);
+    padding: 6px;
+  }
+  
+  header {
+    padding: 10px 8px;
+  }
+  
+  #new-symbol {
+    min-width: 100px;
+    font-size: 16px;
+  }
+  
+  #add-chart {
+    font-size: 15px;
+    padding: 12px;
+    min-width: 70px;
+  }
+  
+  #favorite-select {
+    font-size: 15px;
+    min-width: 90px;
+  }
+  
+  #status-global {
+    padding: 6px;
+  }
+  
+  #label-global {
+    font-size: 12px;
+  }
+  
+  .chart-grid {
+    gap: 10px;
+  }
+  
+  .chart-card {
+    min-height: 280px;
+    font-size: 16px;
+  }
+  
+  .chart-header {
+    padding: 10px 8px;
+    gap: 8px;
+    font-size: 16px;
+  }
+  
+  .ticker-input {
+    font-size: 17px;
+    width: 90px;
+  }
+  
+  .current-price {
+    font-size: 17px;
+  }
+  
+  .timeframe-select {
+    font-size: 15px;
+    padding: 10px;
+  }
+  
+  .right-controls {
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  
+  .right-controls button {
+    font-size: 1.5em;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 10px;
+  }
+  
+  .chart-wrap { 
+    min-height: 180px;
+  }
+  
+  .ema-settings-panel,
+  .indicators-panel {
+    padding: 12px 8px;
+    font-size: 16px;
+    gap: 10px;
+  }
+  
+  .indicators-panel h4 {
+    font-size: 17px;
+  }
+  
+  .indicator-toggles label {
+    font-size: 16px;
+    min-height: 48px;
+  }
+  
+  .ema-settings-panel input[type="number"] {
+    font-size: 16px;
+    min-width: 80px;
+  }
+  
+  .rsi-panel, .macd-panel {
+    min-height: 100px;
+  }
+  
+  .indicator-resize-handle {
+    height: 24px;
+  }
+  
+  .chart-wrap .ema-badges {
+    gap: 4px;
+    top: 4px;
+    left: 4px;
+    max-width: calc(100% - 40px);
+  }
+  .chart-wrap .ema-badges span {
+    font-size: 11px;
+    padding: 2px 5px;
+  }
+  
+  #symbol-suggestions {
+    max-height: 180px;
+    font-size: 16px;
+  }
+  
+  .suggestion-item {
+    padding: 16px;
+    min-height: 56px;
+  }
+  
+  .error-banner {
+    font-size: 14px;
+    padding: 12px 10px;
+  }
+  
+  /* Extra padding for very small screens */
+  .chart-header {
+    padding: 12px 8px !important;
+  }
+  
+  /* Stack controls better on tiny screens */
+  .right-controls {
+    flex-wrap: wrap;
+  }
+  
+  /* Increase touch targets even more on small phones */
+  button, select, input[type="button"], input[type="submit"] {
+    min-height: 48px !important;
+    min-width: 48px !important;
+  }
+}
+
+/* Stochastic RSI Panel */
+.stochrsi-panel {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  resize: none;
+  box-sizing: border-box;
+  background: #161b22;
+  /* Add resizable support */
+  height: 400px;
+  max-height: 400px;
+  transition: max-height 0.18s cubic-bezier(0.3,0.7,0.4,1), height 0.18s cubic-bezier(0.3,0.7,0.4,1);
+}
+
+.stochrsi-header {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.stochrsi-title {
+  font-weight: 600;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+}
+
+.stochrsi-chart {
+  flex: 1;
+  min-height: 60px;
+  transition: height 0.15s;
+  overflow: visible;
+  background: #11161d;
+}
+
+/* Stochastic RSI Settings Panel */
+.stochrsi-settings-panel {
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  z-index: 20;
+}
+
+.stochrsi-settings-panel h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--accent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stochrsi-settings-panel .close-stochrsi-settings {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.stochrsi-settings-panel .close-stochrsi-settings:hover {
+  color: var(--text);
+}
+
+.stochrsi-settings-panel div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stochrsi-settings-panel label {
+  flex: 1;
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 90px;
+}
+
+.stochrsi-settings-panel input[type="number"] {
+  width: 60px;
+  padding: 3px 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.save-stochrsi-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: white;
+  cursor: pointer;
+  margin-top: 4px;
+  align-self: flex-end;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.save-stochrsi-btn:hover {
+  background: #3990ff;
+}
+
+/* Light theme overrides for Stochastic RSI */
+:root[data-theme="light"] .stochrsi-panel {
+  background: #fff;
+}
+
+:root[data-theme="light"] .stochrsi-chart {
+  background: #f5f7fa;
+}
+
+/* Mobile optimizations for Stochastic RSI */
+@media (max-width: 900px) {
+  .stochrsi-panel {
+    padding: 8px;
+    min-height: 120px;
+  }
+  
+  .stochrsi-title {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+  
+  .stochrsi-settings-panel {
+    padding: 12px;
+    font-size: 16px;
+    gap: 12px;
+  }
+  
+  .stochrsi-settings-panel input[type="number"] {
+    font-size: 16px;
+    padding: 10px;
+    min-height: 44px;
+  }
+  
+  .save-stochrsi-btn {
+    font-size: 16px;
+    padding: 12px 20px;
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 600px) {
+  .stochrsi-panel {
+    min-height: 100px;
+  }
+  
+  .stochrsi-settings-panel {
+    padding: 12px 8px;
+    font-size: 16px;
+    gap: 10px;
+  }
+  
+  .stochrsi-settings-panel input[type="number"] {
+    font-size: 16px;
+    min-width: 80px;
+  }
+  
+  .save-stochrsi-btn {
+    font-size: 16px;
+    min-height: 48px;
+  }
+}

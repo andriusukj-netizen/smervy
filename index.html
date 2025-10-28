@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Crypto Charts Grid</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Light theme overrides */
+    :root[data-theme="light"] {
+      --bg: #f5f7fa;
+      --panel: #fff;
+      --border: #d0d7de;
+      --text: #23272e;
+      --muted: #6e7781;
+      --accent: #2176ff;
+      --ok: #2ecc71;
+      --danger: #d7263d;
+    }
+    :root[data-theme="light"] .chart-header { background: #f5f7fa; }
+    :root[data-theme="light"] .tvchart,
+    :root[data-theme="light"] .chart-wrap { background: #f5f7fa; }
+    :root[data-theme="light"] .rsi-panel,
+    :root[data-theme="light"] .macd-panel,
+    :root[data-theme="light"] .stochrsi-panel { background: #fff; }
+    :root[data-theme="light"] .ema-badges span { background: rgba(255,255,255,0.85) !important; color: #23272e !important; }
+
+    /* Paper Trader small UI tweaks (non-invasive) */
+    .pt-trade-btn { background: transparent; border:1px solid var(--border); padding:6px 10px; border-radius:8px; cursor:pointer; }
+    .pt-trade-btn.active { background: var(--accent); color: #fff; }
+    .pt-pnl-badge { font-weight:600; }
+    .pt-orders h4 { margin:8px 0 6px 0; color:var(--accent); }
+    .chart-header .right-controls { display:flex; align-items:center; gap:8px; }
+    @media (max-width:720px) {
+      header .row { gap:6px; }
+      .chart-header label { min-width:120px; }
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle" title="Toggle dark/light theme" style="position:fixed;top:12px;right:12px;z-index:9999;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:1.3em;cursor:pointer;min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
+    🌙
+  </button>
+  <div id="global-error-banner" style="display:none;" class="error-banner">
+    <strong>⚠️ Connection Error:</strong> Binance API or WebSocket is unreachable. Charts and controls are disabled.
+  </div>
+
+  <header>
+    <div class="row" style="margin-left:auto; gap:8px; flex-wrap:wrap;">
+      <input type="text" id="new-symbol" placeholder="Symbol" style="min-width:120px;">
+      <button id="add-chart" style="white-space:nowrap;">+ Add</button>
+      <select id="favorite-select" style="min-width:100px;">
+        <option value="">⭐ Favs</option>
+      </select>
+     
+      <div id="status-global">
+        <span class="dot-global"></span>
+        <span id="label-global">DISCONNECTED</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="chart-grid" id="chart-grid">
+
+      <div class="chart-card chart-ticker" data-symbol="btcusdt" id="btc-card">
+        <div class="chart-header">
+          <div class="drag-handle" title="Drag to move">☰</div>
+          <label>
+            <input type="text" value="BTCUSDT" class="ticker-input" id="ticker-btc">
+            <span class="current-price" data-ticker="btcusdt"></span>
+          </label>
+          <span class="favorite-star" title="Add to favorites">★</span>
+          <select class="timeframe-select">
+            <option value="1m">1m</option>
+            <option value="3m">3m</option>
+            <option value="5m" selected>5m</option>
+            <option value="15m">15m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="2h">2h</option>
+            <option value="4h">4h</option>
+            <option value="6h">6h</option>
+            <option value="8h">8h</option>
+            <option value="12h">12h</option>
+            <option value="1d">1d</option>
+            <option value="3d">3d</option>
+            <option value="1w">1w</option>
+            <option value="1M">1M</option>
+          </select>
+          <div class="right-controls">
+            <button class="toggle-indicators" title="Indicators">📊</button>
+            <button class="drawing-tools-btn" title="Drawing Tools">✏️</button>
+            <button class="fullscreen-btn" title="Fullscreen">⛶</button>
+            <button class="remove-btn">✕</button>
+            <button class="custom-indicator-btn" title="Add Custom Indicator">➕ Custom Indicator</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div id="chart-btc" class="tvchart"></div>
+          <div class="ema-badges"></div>
+        </div>
+        <div class="rsi-panel" id="rsi-panel-btc" style="display:none;">
+          <div class="rsi-header">
+            <span class="rsi-title">RSI (14)</span>
+            <span class="rsi-value" id="rsi-value-btc"></span>
+          </div>
+          <div id="rsi-chart-btc" class="rsi-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="macd-panel" id="macd-panel-btc" style="display:none;">
+          <div class="macd-header">
+            <span class="macd-title">MACD (12,26,9)</span>
+          </div>
+          <div id="macd-chart-btc" class="macd-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="stochrsi-panel" id="stochrsi-panel-btc" style="display:none;">
+          <div class="stochrsi-header">
+            <span class="stochrsi-title">Stochastic RSI (14,14,3,3)</span>
+          </div>
+          <div id="stochrsi-chart-btc" class="stochrsi-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="indicators-panel" id="indicators-btc">
+          <h4>Indicators</h4>
+          <div class="indicator-toggles">
+            <label><input type="checkbox" data-indicator="rsi"> Relative Strength Index (RSI)</label>
+            <label><input type="checkbox" data-indicator="ema"> Exponential Moving Averages (EMA)</label>
+            <label><input type="checkbox" data-indicator="volume"> Volume</label>
+            <label><input type="checkbox" data-indicator="macd"> MACD</label>
+            <label><input type="checkbox" data-indicator="superguppy"> Super Guppy (GMMA)</label>
+            <label><input type="checkbox" data-indicator="bb"> Bollinger Bands</label>
+            <label><input type="checkbox" data-indicator="stochrsi"> Stochastic RSI</label>
+          </div>
+
+          <!-- Paper orders container (added non-destructively for all cards) -->
+          <div class="pt-orders" style="margin-top:10px;">
+            <h4>Paper Orders</h4>
+            <div class="pt-orders-list" style="max-height:160px;overflow:auto;"></div>
+          </div>
+
+          <div class="ema-settings-panel" id="ema-settings-btc" style="display:none;">
+            <h4>EMA Settings <button class="close-ema-settings" title="Close">✕</button></h4>
+            <div><label>Period:</label><input type="number" value="20" min="1" id="ema-period-btc1"><input type="color" value="#ff9800" id="ema-color-btc1"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="100" min="1" id="ema-period-btc2"><input type="color" value="#2196f3" id="ema-color-btc2"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="200" min="1" id="ema-period-btc3"><input type="color" value="#4caf50" id="ema-color-btc3"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="400" min="1" id="ema-period-btc4"><input type="color" value="#e91e63" id="ema-color-btc4"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <button class="save-ema-btn" data-target="btc">Save</button>
+          </div>
+          <div class="bb-settings-panel" id="bb-settings-btc" style="display:none;">
+            <h4>Bollinger Bands Settings <button class="close-bb-settings" title="Close">✕</button></h4>
+            <div><label>Period:</label><input type="number" value="20" min="5" max="200" id="bb-period-btc"></div>
+            <div><label>Std Dev:</label><input type="number" value="2" min="0.5" max="5" step="0.5" id="bb-stddev-btc"></div>
+            <button class="save-bb-btn" data-target="btc">Apply</button>
+          </div>
+          <div class="stochrsi-settings-panel" id="stochrsi-settings-btc" style="display:none;">
+            <h4>Stochastic RSI Settings <button class="close-stochrsi-settings" title="Close">✕</button></h4>
+            <div><label>RSI Period:</label><input type="number" value="14" min="2" max="50" id="stochrsi-rsi-period-btc"></div>
+            <div><label>Stoch Period:</label><input type="number" value="14" min="2" max="50" id="stochrsi-stoch-period-btc"></div>
+            <div><label>%K Period:</label><input type="number" value="3" min="1" max="20" id="stochrsi-k-period-btc"></div>
+            <div><label>%D Period:</label><input type="number" value="3" min="1" max="20" id="stochrsi-d-period-btc"></div>
+            <button class="save-stochrsi-btn" data-target="btc">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card chart-ticker" data-symbol="ethusdt" id="eth-card">
+        <div class="chart-header">
+          <div class="drag-handle" title="Drag to move">☰</div>
+          <label>
+            <input type="text" value="ETHUSDT" class="ticker-input" id="ticker-eth">
+            <span class="current-price" data-ticker="ethusdt"></span>
+          </label>
+          <span class="favorite-star" title="Add to favorites">★</span>
+          <select class="timeframe-select">
+            <option value="1m">1m</option>
+            <option value="3m">3m</option>
+            <option value="5m" selected>5m</option>
+            <option value="15m">15m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="2h">2h</option>
+            <option value="4h">4h</option>
+            <option value="6h">6h</option>
+            <option value="8h">8h</option>
+            <option value="12h">12h</option>
+            <option value="1d">1d</option>
+            <option value="3d">3d</option>
+            <option value="1w">1w</option>
+            <option value="1M">1M</option>
+          </select>
+          <div class="right-controls">
+            <button class="toggle-indicators" title="Indicators">📊</button>
+            <button class="drawing-tools-btn" title="Drawing Tools">✏️</button>
+            <button class="fullscreen-btn" title="Fullscreen">⛶</button>
+            <button class="remove-btn">✕</button>
+            <button class="custom-indicator-btn" title="Add Custom Indicator">➕ Custom Indicator</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div id="chart-eth" class="tvchart"></div>
+          <div class="ema-badges"></div>
+        </div>
+        <div class="rsi-panel" id="rsi-panel-eth" style="display:none;">
+          <div class="rsi-header">
+            <span class="rsi-title">RSI (14)</span>
+            <span class="rsi-value" id="rsi-value-eth"></span>
+          </div>
+          <div id="rsi-chart-eth" class="rsi-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="macd-panel" id="macd-panel-eth" style="display:none;">
+          <div class="macd-header">
+            <span class="macd-title">MACD (12,26,9)</span>
+          </div>
+          <div id="macd-chart-eth" class="macd-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="stochrsi-panel" id="stochrsi-panel-eth" style="display:none;">
+          <div class="stochrsi-header">
+            <span class="stochrsi-title">Stochastic RSI (14,14,3,3)</span>
+          </div>
+          <div id="stochrsi-chart-eth" class="stochrsi-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="indicators-panel" id="indicators-eth">
+          <h4>Indicators</h4>
+          <div class="indicator-toggles">
+            <label><input type="checkbox" data-indicator="rsi"> Relative Strength Index (RSI)</label>
+            <label><input type="checkbox" data-indicator="ema"> Exponential Moving Averages (EMA)</label>
+            <label><input type="checkbox" data-indicator="volume"> Volume</label>
+            <label><input type="checkbox" data-indicator="macd"> MACD</label>
+            <label><input type="checkbox" data-indicator="superguppy"> Super Guppy (GMMA)</label>
+            <label><input type="checkbox" data-indicator="bb"> Bollinger Bands</label>
+            <label><input type="checkbox" data-indicator="stochrsi"> Stochastic RSI</label>
+          </div>
+
+          <div class="pt-orders" style="margin-top:10px;">
+            <h4>Paper Orders</h4>
+            <div class="pt-orders-list" style="max-height:160px;overflow:auto;"></div>
+          </div>
+
+          <div class="ema-settings-panel" id="ema-settings-eth" style="display:none;">
+            <h4>EMA Settings <button class="close-ema-settings" title="Close">✕</button></h4>
+            <div><label>Period:</label><input type="number" value="20" min="1" id="ema-period-eth1"><input type="color" value="#ff9800" id="ema-color-eth1"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="100" min="1" id="ema-period-eth2"><input type="color" value="#2196f3" id="ema-color-eth2"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="200" min="1" id="ema-period-eth3"><input type="color" value="#4caf50" id="ema-color-eth3"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="400" min="1" id="ema-period-eth4"><input type="color" value="#e91e63" id="ema-color-eth4"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <button class="save-ema-btn" data-target="eth">Save</button>
+          </div>
+          <div class="bb-settings-panel" id="bb-settings-eth" style="display:none;">
+            <h4>Bollinger Bands Settings <button class="close-bb-settings" title="Close">✕</button></h4>
+            <div><label>Period:</label><input type="number" value="20" min="5" max="200" id="bb-period-eth"></div>
+            <div><label>Std Dev:</label><input type="number" value="2" min="0.5" max="5" step="0.5" id="bb-stddev-eth"></div>
+            <button class="save-bb-btn" data-target="eth">Apply</button>
+          </div>
+          <div class="stochrsi-settings-panel" id="stochrsi-settings-eth" style="display:none;">
+            <h4>Stochastic RSI Settings <button class="close-stochrsi-settings" title="Close">✕</button></h4>
+            <div><label>RSI Period:</label><input type="number" value="14" min="2" max="50" id="stochrsi-rsi-period-eth"></div>
+            <div><label>Stoch Period:</label><input type="number" value="14" min="2" max="50" id="stochrsi-stoch-period-eth"></div>
+            <div><label>%K Period:</label><input type="number" value="3" min="1" max="20" id="stochrsi-k-period-eth"></div>
+            <div><label>%D Period:</label><input type="number" value="3" min="1" max="20" id="stochrsi-d-period-eth"></div>
+            <button class="save-stochrsi-btn" data-target="eth">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card chart-ticker" data-symbol="solusdt" id="sol-card">
+        <div class="chart-header">
+          <div class="drag-handle" title="Drag to move">☰</div>
+          <label>
+            <input type="text" value="SOLUSDT" class="ticker-input" id="ticker-sol">
+            <span class="current-price" data-ticker="solusdt"></span>
+          </label>
+          <span class="favorite-star" title="Add to favorites">★</span>
+          <select class="timeframe-select">
+            <option value="1m">1m</option>
+            <option value="3m">3m</option>
+            <option value="5m" selected>5m</option>
+            <option value="15m">15m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="2h">2h</option>
+            <option value="4h">4h</option>
+            <option value="6h">6h</option>
+            <option value="8h">8h</option>
+            <option value="12h">12h</option>
+            <option value="1d">1d</option>
+            <option value="3d">3d</option>
+            <option value="1w">1w</option>
+            <option value="1M">1M</option>
+          </select>
+          <div class="right-controls">
+            <button class="toggle-indicators" title="Indicators">📊</button>
+            <button class="drawing-tools-btn" title="Drawing Tools">✏️</button>
+            <button class="fullscreen-btn" title="Fullscreen">⛶</button>
+            <button class="remove-btn">✕</button>
+            <button class="custom-indicator-btn" title="Add Custom Indicator">➕ Custom Indicator</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div id="chart-sol" class="tvchart"></div>
+          <div class="ema-badges"></div>
+        </div>
+        <div class="rsi-panel" id="rsi-panel-sol" style="display:none;">
+          <div class="rsi-header">
+            <span class="rsi-title">RSI (14)</span>
+            <span class="rsi-value" id="rsi-value-sol"></span>
+          </div>
+          <div id="rsi-chart-sol" class="rsi-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="macd-panel" id="macd-panel-sol" style="display:none;">
+          <div class="macd-header">
+            <span class="macd-title">MACD (12,26,9)</span>
+          </div>
+          <div id="macd-chart-sol" class="macd-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="stochrsi-panel" id="stochrsi-panel-sol" style="display:none;">
+          <div class="stochrsi-header">
+            <span class="stochrsi-title">Stochastic RSI (14,14,3,3)</span>
+          </div>
+          <div id="stochrsi-chart-sol" class="stochrsi-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="indicators-panel" id="indicators-sol">
+          <h4>Indicators</h4>
+          <div class="indicator-toggles">
+            <label><input type="checkbox" data-indicator="rsi"> Relative Strength Index (RSI)</label>
+            <label><input type="checkbox" data-indicator="ema"> Exponential Moving Averages (EMA)</label>
+            <label><input type="checkbox" data-indicator="volume"> Volume</label>
+            <label><input type="checkbox" data-indicator="macd"> MACD</label>
+            <label><input type="checkbox" data-indicator="superguppy"> Super Guppy (GMMA)</label>
+            <label><input type="checkbox" data-indicator="bb"> Bollinger Bands</label>
+            <label><input type="checkbox" data-indicator="stochrsi"> Stochastic RSI</label>
+          </div>
+
+          <div class="pt-orders" style="margin-top:10px;">
+            <h4>Paper Orders</h4>
+            <div class="pt-orders-list" style="max-height:160px;overflow:auto;"></div>
+          </div>
+
+          <div class="ema-settings-panel" id="ema-settings-sol" style="display:none;">
+            <h4>EMA Settings <button class="close-ema-settings" title="Close">✕</button></h4>
+            <div><label>Period:</label><input type="number" value="20" min="1" id="ema-period-sol1"><input type="color" value="#ff9800" id="ema-color-sol1"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="100" min="1" id="ema-period-sol2"><input type="color" value="#2196f3" id="ema-color-sol2"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="200" min="1" id="ema-period-sol3"><input type="color" value="#4caf50" id="ema-color-sol3"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="400" min="1" id="ema-period-sol4"><input type="color" value="#e91e63" id="ema-color-sol4"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <button class="save-ema-btn" data-target="sol">Save</button>
+          </div>
+          <div class="bb-settings-panel" id="bb-settings-sol" style="display:none;">
+            <h4>Bollinger Bands Settings <button class="close-bb-settings" title="Close">✕</button></h4>
+            <div><label>Period:</label><input type="number" value="20" min="5" max="200" id="bb-period-sol"></div>
+            <div><label>Std Dev:</label><input type="number" value="2" min="0.5" max="5" step="0.5" id="bb-stddev-sol"></div>
+            <button class="save-bb-btn" data-target="sol">Apply</button>
+          </div>
+          <div class="stochrsi-settings-panel" id="stochrsi-settings-sol" style="display:none;">
+            <h4>Stochastic RSI Settings <button class="close-stochrsi-settings" title="Close">✕</button></h4>
+            <div><label>RSI Period:</label><input type="number" value="14" min="2" max="50" id="stochrsi-rsi-period-sol"></div>
+            <div><label>Stoch Period:</label><input type="number" value="14" min="2" max="50" id="stochrsi-stoch-period-sol"></div>
+            <div><label>%K Period:</label><input type="number" value="3" min="1" max="20" id="stochrsi-k-period-sol"></div>
+            <div><label>%D Period:</label><input type="number" value="3" min="1" max="20" id="stochrsi-d-period-sol"></div>
+            <button class="save-stochrsi-btn" data-target="sol">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card chart-ticker" data-symbol="bnbusdt" id="bnb-card">
+        <div class="chart-header">
+          <div class="drag-handle" title="Drag to move">☰</div>
+          <label>
+            <input type="text" value="BNBUSDT" class="ticker-input" id="ticker-bnb">
+            <span class="current-price" data-ticker="bnbusdt"></span>
+          </label>
+          <span class="favorite-star" title="Add to favorites">★</span>
+          <select class="timeframe-select">
+            <option value="1m">1m</option>
+            <option value="3m">3m</option>
+            <option value="5m" selected>5m</option>
+            <option value="15m">15m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="2h">2h</option>
+            <option value="4h">4h</option>
+            <option value="6h">6h</option>
+            <option value="8h">8h</option>
+            <option value="12h">12h</option>
+            <option value="1d">1d</option>
+            <option value="3d">3d</option>
+            <option value="1w">1w</option>
+            <option value="1M">1M</option>
+          </select>
+          <div class="right-controls">
+            <button class="toggle-indicators" title="Indicators">📊</button>
+            <button class="drawing-tools-btn" title="Drawing Tools">✏️</button>
+            <button class="fullscreen-btn" title="Fullscreen">⛶</button>
+            <button class="remove-btn">✕</button>
+            <button class="custom-indicator-btn" title="Add Custom Indicator">➕ Custom Indicator</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div id="chart-bnb" class="tvchart"></div>
+          <div class="ema-badges"></div>
+        </div>
+        <div class="rsi-panel" id="rsi-panel-bnb" style="display:none;">
+          <div class="rsi-header">
+            <span class="rsi-title">RSI (14)</span>
+            <span class="rsi-value" id="rsi-value-bnb"></span>
+          </div>
+          <div id="rsi-chart-bnb" class="rsi-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="macd-panel" id="macd-panel-bnb" style="display:none;">
+          <div class="macd-header">
+            <span class="macd-title">MACD (12,26,9)</span>
+          </div>
+          <div id="macd-chart-bnb" class="macd-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="stochrsi-panel" id="stochrsi-panel-bnb" style="display:none;">
+          <div class="stochrsi-header">
+            <span class="stochrsi-title">Stochastic RSI (14,14,3,3)</span>
+          </div>
+          <div id="stochrsi-chart-bnb" class="stochrsi-chart"></div>
+          <div class="indicator-resize-handle" tabindex="0" aria-label="Resize panel" role="separator"></div>
+        </div>
+        <div class="indicators-panel" id="indicators-bnb">
+          <h4>Indicators</h4>
+          <div class="indicator-toggles">
+            <label><input type="checkbox" data-indicator="rsi"> Relative Strength Index (RSI)</label>
+            <label><input type="checkbox" data-indicator="ema"> Exponential Moving Averages (EMA)</label>
+            <label><input type="checkbox" data-indicator="volume"> Volume</label>
+            <label><input type="checkbox" data-indicator="macd"> MACD</label>
+            <label><input type="checkbox" data-indicator="superguppy"> Super Guppy (GMMA)</label>
+            <label><input type="checkbox" data-indicator="bb"> Bollinger Bands</label>
+            <label><input type="checkbox" data-indicator="stochrsi"> Stochastic RSI</label>
+          </div>
+
+          <div class="pt-orders" style="margin-top:10px;">
+            <h4>Paper Orders</h4>
+            <div class="pt-orders-list" style="max-height:160px;overflow:auto;"></div>
+          </div>
+
+          <div class="ema-settings-panel" id="ema-settings-bnb" style="display:none;">
+            <h4>EMA Settings <button class="close-ema-settings" title="Close">✕</button></h4>
+            <div><label>Period:</label><input type="number" value="20" min="1" id="ema-period-bnb1"><input type="color" value="#ff9800" id="ema-color-bnb1"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="100" min="1" id="ema-period-bnb2"><input type="color" value="#2196f3" id="ema-color-bnb2"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="200" min="1" id="ema-period-bnb3"><input type="color" value="#4caf50" id="ema-color-bnb3"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <div><label>Period:</label><input type="number" value="400" min="1" id="ema-period-bnb4"><input type="color" value="#e91e63" id="ema-color-bnb4"><label><input type="checkbox" class="ema-badge-toggle" checked> Show badge</label></div>
+            <button class="save-ema-btn" data-target="bnb">Save</button>
+          </div>
+          <div class="bb-settings-panel" id="bb-settings-bnb" style="display:none;">
+            <h4>Bollinger Bands Settings <button class="close-bb-settings" title="Close">✕</button></h4>
+            <div><label>Period:</label><input type="number" value="20" min="5" max="200" id="bb-period-bnb"></div>
+            <div><label>Std Dev:</label><input type="number" value="2" min="0.5" max="5" step="0.5" id="bb-stddev-bnb"></div>
+            <button class="save-bb-btn" data-target="bnb">Apply</button>
+          </div>
+          <div class="stochrsi-settings-panel" id="stochrsi-settings-bnb" style="display:none;">
+            <h4>Stochastic RSI Settings <button class="close-stochrsi-settings" title="Close">✕</button></h4>
+            <div><label>RSI Period:</label><input type="number" value="14" min="2" max="50" id="stochrsi-rsi-period-bnb"></div>
+            <div><label>Stoch Period:</label><input type="number" value="14" min="2" max="50" id="stochrsi-stoch-period-bnb"></div>
+            <div><label>%K Period:</label><input type="number" value="3" min="1" max="20" id="stochrsi-k-period-bnb"></div>
+            <div><label>%D Period:</label><input type="number" value="3" min="1" max="20" id="stochrsi-d-period-bnb"></div>
+            <button class="save-stochrsi-btn" data-target="bnb">Apply</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="custom-indicator-modal" style="display:none; position:fixed; z-index:99999; left:0; top:0; width:100vw; height:100vh; background:rgba(16,20,30,0.92);">
+    <div style="margin:60px auto 0 auto; max-width:500px; background:var(--panel); border-radius:12px; box-shadow:0 6px 32px rgba(0,0,0,0.4); padding:22px 22px;">
+      <h2 style="color:var(--accent);margin-top:0;">Custom Indicator JS</h2>
+      <textarea id="custom-indicator-js-input" rows="12" style="width:100%; font-family:monospace; font-size:1em; background:var(--bg); color:var(--text); border-radius:6px; border:1px solid var(--border);"></textarea>
+      <div style="margin:12px 0;">
+        <input type="file" id="custom-indicator-js-upload" accept=".js">
+      </div>
+      <div style="margin-top:10px; display:flex; gap:12px;">
+        <button id="custom-indicator-save" style="background:var(--ok); color:#fff; border:none; border-radius:6px; padding:8px 18px; font-size:1em; cursor:pointer;">Add</button>
+        <button id="custom-indicator-cancel" style="background:var(--danger); color:#fff; border:none; border-radius:6px; padding:8px 18px; font-size:1em; cursor:pointer;">Cancel</button>
+      </div>
+      <div style="font-size:13px; color:var(--muted); margin-top:12px;">
+        <strong>How it works:</strong> Paste JS code for a function:<br>
+        <code>
+          function customIndicator(candles, chart, utils) { /* ... */ }
+        </code>
+        <br>
+        You may use <code>chart.addLineSeries()</code>, <code>candles</code> array, and <code>utils</code> helpers.
+      </div>
+    </div>
+  </div>
+
+  <!-- core scripts (unchanged) -->
+  <script src="./binance-socket.js" type="module"></script>
+  <script src="./lightweightchart.js" type="module"></script>
+  <script src="./ticker-select.js" type="module"></script>
+  <script src="./alert-ui.js" type="module"></script>
+  <script src="./panel-resize.js"></script>
+  <script type="module" src="./paper-trader/index.js"></script>
+  
+  <script>
+    // Theme toggle logic
+    const btn = document.getElementById('theme-toggle');
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      btn.textContent = theme === 'light' ? '🌞' : '🌙';
+      btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+    }
+    btn.onclick = () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    };
+    // Init theme from localStorage or system preference
+    (function() {
+      let theme = localStorage.getItem('theme');
+      if (!theme) {
+        theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+      setTheme(theme);
+    })();
+
+    // Setup Bollinger Bands settings handlers and panel resize initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      // Handle BB settings panel toggle and save
+      ['btc', 'eth', 'sol', 'bnb'].forEach(symbol => {
+        const bbCheckbox = document.querySelector(`#indicators-${symbol} input[data-indicator="bb"]`);
+        const bbSettingsPanel = document.getElementById(`bb-settings-${symbol}`);
+        const closeBbBtn = bbSettingsPanel?.querySelector('.close-bb-settings');
+        const saveBbBtn = bbSettingsPanel?.querySelector('.save-bb-btn');
+
+        if (bbCheckbox && bbSettingsPanel) {
+          // Show/hide settings panel when checkbox changes
+          bbCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+              bbSettingsPanel.style.display = 'flex';
+            } else {
+              bbSettingsPanel.style.display = 'none';
+            }
+          });
+
+          // Close button
+          if (closeBbBtn) {
+            closeBbBtn.addEventListener('click', () => {
+              bbSettingsPanel.style.display = 'none';
+            });
+          }
+
+          // Save button - updates the indicator with new settings
+          if (saveBbBtn) {
+            saveBbBtn.addEventListener('click', () => {
+              const period = parseInt(document.getElementById(`bb-period-${symbol}`)?.value || 20);
+              const stdDev = parseFloat(document.getElementById(`bb-stddev-${symbol}`)?.value || 2);
+              
+              // Get the chart renderer instance
+              const cardId = `${symbol}-card`;
+              const card = document.getElementById(cardId);
+              const chartRenderer = card?.chartRenderer;
+              
+              if (chartRenderer && typeof chartRenderer.updateIndicator === 'function') {
+                chartRenderer.updateIndicator('bb', { period, stdDev });
+                
+                // Show feedback
+                saveBbBtn.textContent = '✓ Applied';
+                saveBbBtn.style.background = 'var(--ok)';
+                setTimeout(() => {
+                  saveBbBtn.textContent = 'Apply';
+                  saveBbBtn.style.background = 'var(--accent)';
+                }, 2000);
+              }
+            });
+          }
+        }
+
+        // Handle Stochastic RSI settings panel toggle and save
+        const stochRSICheckbox = document.querySelector(`#indicators-${symbol} input[data-indicator="stochrsi"]`);
+        const stochRSISettingsPanel = document.getElementById(`stochrsi-settings-${symbol}`);
+        const closeStochRSIBtn = stochRSISettingsPanel?.querySelector('.close-stochrsi-settings');
+        const saveStochRSIBtn = stochRSISettingsPanel?.querySelector('.save-stochrsi-btn');
+
+        if (stochRSICheckbox && stochRSISettingsPanel) {
+          // Show/hide settings panel when checkbox changes
+          stochRSICheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+              stochRSISettingsPanel.style.display = 'flex';
+            } else {
+              stochRSISettingsPanel.style.display = 'none';
+            }
+          });
+
+          // Close button
+          if (closeStochRSIBtn) {
+            closeStochRSIBtn.addEventListener('click', () => {
+              stochRSISettingsPanel.style.display = 'none';
+            });
+          }
+
+          // Save button - updates the indicator with new settings
+          if (saveStochRSIBtn) {
+            saveStochRSIBtn.addEventListener('click', () => {
+              const rsiPeriod = parseInt(document.getElementById(`stochrsi-rsi-period-${symbol}`)?.value || 14);
+              const stochPeriod = parseInt(document.getElementById(`stochrsi-stoch-period-${symbol}`)?.value || 14);
+              const kPeriod = parseInt(document.getElementById(`stochrsi-k-period-${symbol}`)?.value || 3);
+              const dPeriod = parseInt(document.getElementById(`stochrsi-d-period-${symbol}`)?.value || 3);
+              
+              // Get the chart renderer instance
+              const cardId = `${symbol}-card`;
+              const card = document.getElementById(cardId);
+              const chartRenderer = card?.chartRenderer;
+              
+              if (chartRenderer && typeof chartRenderer.updateIndicator === 'function') {
+                chartRenderer.updateIndicator('stochrsi', { rsiPeriod, stochPeriod, kPeriod, dPeriod });
+                
+                // Show feedback
+                saveStochRSIBtn.textContent = '✓ Applied';
+                saveStochRSIBtn.style.background = 'var(--ok)';
+                setTimeout(() => {
+                  saveStochRSIBtn.textContent = 'Apply';
+                  saveStochRSIBtn.style.background = 'var(--accent)';
+                }, 2000);
+              }
+            });
+          }
+        }
+
+        // Handle EMA settings close button
+        const emaSettingsPanel = document.getElementById(`ema-settings-${symbol}`);
+        const closeEmaBtn = emaSettingsPanel?.querySelector('.close-ema-settings');
+        if (closeEmaBtn && emaSettingsPanel) {
+          closeEmaBtn.addEventListener('click', () => {
+            emaSettingsPanel.style.display = 'none';
+          });
+        }
+      });
+
+      // initialize panel resize handlers
+      if (typeof setupPanelResize === 'function') {
+        try { setupPanelResize(); } catch (e) {}
+      }
+    });
+  </script>
+</body>
+</html>
